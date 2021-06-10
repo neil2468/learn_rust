@@ -50,7 +50,7 @@ impl FuzzySet {
 
     pub fn membership_asciigraph(
         &self,
-        value_range: std::ops::Range<i32>,
+        value_range: std::ops::RangeInclusive<i32>,
         dimensions: (u32, u32),
     ) -> String {
         let data = value_range
@@ -60,7 +60,10 @@ impl FuzzySet {
         let v = ContinuousView::new().add(s1);
 
         let mut result = String::new();
-        result.push_str(&format!("  name = {}\n", self.name()));
+        result.push_str(&format!(
+            "Membership function of set '{}'...\n",
+            self.name()
+        ));
         result.push_str(&format!(
             "  points = {}\n",
             self.points
@@ -69,7 +72,6 @@ impl FuzzySet {
                 .collect::<Vec<String>>()
                 .join(", ")
         ));
-        result.push_str("\n");
         result.push_str(
             &Page::single(&v)
                 .dimensions(dimensions.0, dimensions.1)
@@ -103,7 +105,6 @@ impl FuzzySet {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -126,7 +127,7 @@ mod tests {
             &[(30, 0.0), (60, 0.50), (70, 1.0), (90, 1.0), (100, 0.0)],
         );
 
-        // Test... 
+        // Test...
         // - we can calculate membership for within and outside the range of the set's points without panics
         // - values outside the range of the set's points have membership of 0.0
         for value in -10..110 {
@@ -136,5 +137,4 @@ mod tests {
             }
         }
     }
-
 }
