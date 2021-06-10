@@ -1,6 +1,3 @@
-use log::*;
-
-extern crate plotlib;
 use plotlib::page::Page;
 use plotlib::repr::Plot;
 use plotlib::style::{PointMarker, PointStyle};
@@ -51,19 +48,36 @@ impl FuzzySet {
         &self.name
     }
 
-    pub fn membership_asciigraph(&self, value_range: std::ops::Range<i32>, dimensions: (u32, u32)) -> String {
-        let data = value_range.map(|x| (x as f64, self.membership(x))).collect();
+    pub fn membership_asciigraph(
+        &self,
+        value_range: std::ops::Range<i32>,
+        dimensions: (u32, u32),
+    ) -> String {
+        let data = value_range
+            .map(|x| (x as f64, self.membership(x)))
+            .collect();
         let s1 = Plot::new(data).point_style(PointStyle::new().marker(PointMarker::Cross));
         let v = ContinuousView::new().add(s1);
 
         let mut result = String::new();
-        result.push_str(&format!("name = {}\n", self.name()));
-        result.push_str(&format!("points = {}\n", self.points.iter().map(|p| format!("({}, {})", p.x, p.y)).collect::<Vec<String>>().join(", ")));
+        result.push_str(&format!("  name = {}\n", self.name()));
+        result.push_str(&format!(
+            "  points = {}\n",
+            self.points
+                .iter()
+                .map(|p| format!("({}, {})", p.x, p.y))
+                .collect::<Vec<String>>()
+                .join(", ")
+        ));
         result.push_str("\n");
-        result.push_str(&Page::single(&v).dimensions(dimensions.0, dimensions.1).to_text().unwrap());
+        result.push_str(
+            &Page::single(&v)
+                .dimensions(dimensions.0, dimensions.1)
+                .to_text()
+                .unwrap(),
+        );
         result
     }
-
 
     pub fn membership(&self, value: i32) -> f64 {
         let mut result = 0.0;
@@ -87,4 +101,40 @@ impl FuzzySet {
         }
         result
     }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_1() {
+        let set = FuzzySet::new(
+            "A",
+            &[(30, 0.0), (60, 0.50), (70, 1.0), (90, 1.0), (100, 0.0)],
+        );
+
+        // Test membership calculation
+        assert_eq!(set.membership(65), 0.75);
+    }
+
+    #[test]
+    fn test_2() {
+        let set = FuzzySet::new(
+            "A",
+            &[(30, 0.0), (60, 0.50), (70, 1.0), (90, 1.0), (100, 0.0)],
+        );
+
+        // Test... 
+        // - we can calculate membership for within and outside the range of the set's points without panics
+        // - values outside the range of the set's points have membership of 0.0
+        for value in -10..110 {
+            let m = set.membership(value);
+            if value < 30 || value > 100 {
+                assert_eq!(m, 0.0);
+            }
+        }
+    }
+
 }
