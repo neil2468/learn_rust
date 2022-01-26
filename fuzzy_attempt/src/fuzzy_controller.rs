@@ -1,4 +1,5 @@
 use super::fuzzy_set::FuzzySet;
+use std::cmp;
 
 const ASCIIGRAPH_DIMENSIONS: (u32, u32) = (100, 10);
 
@@ -15,12 +16,23 @@ impl FuzzyController {
         self.sets.push(set);
     }
 
-    pub fn membership_asciigraphs(&self, value_range: std::ops::RangeInclusive<i32>) -> Vec<String> {
+    pub fn membership_asciigraphs(&self) -> Vec<String> {
+        let range_x_min = self.sets.iter().fold(i32::MAX, |acc, ele| cmp::min(acc, ele.range_x().0));
+        let range_x_max = self.sets.iter().fold(i32::MIN, |acc, ele| cmp::max(acc, ele.range_x().1));
         self.sets
             .iter()
-            .map(|s| s.membership_asciigraph(value_range.clone(), ASCIIGRAPH_DIMENSIONS))
+            .map(|s| s.membership_asciigraph(range_x_min..=range_x_max, ASCIIGRAPH_DIMENSIONS))
             .collect()
     }
+
+    pub fn fuzzify(&self, value: i32) -> Vec<(&str, f64)> {
+        self.sets
+            .iter()
+            .map(|s| (s.name(), s.membership(value)))
+            .collect()        
+    }
+
+
 }
 
 #[cfg(test)]
@@ -37,7 +49,7 @@ mod tests {
             &[(30, 0.0), (60, 0.25), (70, 1.0), (90, 1.0), (100, 0.0)],
         ));
     
-        for graph in c.membership_asciigraphs(0..=100) {
+        for graph in c.membership_asciigraphs() {
             assert_ne!(graph.len(), 0);
         }
     }

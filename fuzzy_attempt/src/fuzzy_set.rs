@@ -4,10 +4,17 @@ use plotlib::style::{PointMarker, PointStyle};
 use plotlib::view::ContinuousView;
 
 #[derive(Debug)]
-struct Point {
-    x: i32,
-    y: f64,
+pub struct Point {
+    pub x: i32,
+    pub y: f64,
 }
+
+impl Point {
+    pub fn new(x: i32, y: f64) -> Point {
+        Point {x: x, y: y}
+    }
+}
+
 
 #[derive(Debug)]
 pub struct FuzzySet {
@@ -19,25 +26,37 @@ pub struct FuzzySet {
 }
 
 impl FuzzySet {
-    pub fn new(name: &str, points: &[(i32, f64)]) -> FuzzySet {
-        let mut tmp_points: Vec<Point> = points
-            .iter()
-            .map(|x| Point { x: x.0, y: x.1 })
-            .collect::<Vec<_>>();
-        tmp_points.sort_by(|a, b| a.x.cmp(&b.x));
-        let x_min = tmp_points.first().unwrap().x;
-        let x_max = tmp_points.last().unwrap().x;
 
-        let slopes: Vec<f64> = (0..(tmp_points.len() - 1))
+    pub fn new_leading(name: &str, a: i32, b: i32, c: i32) -> FuzzySet {
+        let points = vec![Point::new(a, 1.0), Point::new(b, 1.0), Point::new(c, 0.0)];
+        FuzzySet::new(name, points)
+    }
+
+    pub fn new_trailing(name: &str, a: i32, b: i32, c: i32) -> FuzzySet {
+        let points = vec![Point::new(a, 0.0), Point::new(b, 1.0), Point::new(c, 1.0)];
+        FuzzySet::new(name, points)
+    }
+
+    pub fn new_triangle(name: &str, a: i32, b: i32, c: i32) -> FuzzySet {
+        let points = vec![Point::new(a, 0.0), Point::new(b, 1.0), Point::new(c, 0.0)];
+        FuzzySet::new(name, points)
+    }
+
+    pub fn new(name: &str, mut points: Vec<Point>) -> FuzzySet {
+        points.sort_by(|a, b| a.x.cmp(&b.x));
+        let x_min = points.first().unwrap().x;
+        let x_max = points.last().unwrap().x;
+
+        let slopes: Vec<f64> = (0..(points.len() - 1))
             .map(|i| -> f64 {
-                ((tmp_points[i + 1].y - tmp_points[i].y) as f64)
-                    / ((tmp_points[i + 1].x - tmp_points[i].x) as f64)
+                ((points[i + 1].y - points[i].y) as f64)
+                    / ((points[i + 1].x - points[i].x) as f64)
             })
             .collect();
 
         FuzzySet {
             name: name.to_string(),
-            points: tmp_points,
+            points: points,
             x_min: x_min,
             x_max: x_max,
             slopes: slopes,
@@ -48,6 +67,11 @@ impl FuzzySet {
         &self.name
     }
 
+    /// Returns the min and max of x for the set
+    pub fn range_x(&self) -> (i32, i32) {
+        (self.x_min, self.x_max)
+    }
+
     pub fn membership_asciigraph(
         &self,
         value_range: std::ops::RangeInclusive<i32>,
@@ -56,8 +80,8 @@ impl FuzzySet {
         let data = value_range
             .map(|x| (x as f64, self.membership(x)))
             .collect();
-        let s1 = Plot::new(data).point_style(PointStyle::new().marker(PointMarker::Cross));
-        let v = ContinuousView::new().add(s1);
+            let s1 = Plot::new(data).point_style(PointStyle::new().marker(PointMarker::Cross));
+            let v = ContinuousView::new().add(s1);
 
         let mut result = String::new();
         result.push_str(&format!(
