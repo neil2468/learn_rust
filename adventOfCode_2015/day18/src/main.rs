@@ -3,14 +3,32 @@ use std::str::Lines;
 fn main() {
     println!("Hello, world!");
 
-    let input = include_str!("input.txt").lines();
-    let mut grid = Grid::from_lines(input);
+    let mut grid = Grid::from_lines(include_str!("input.txt").lines());
     println!("Dimensions: {}w {}h", grid.width(), grid.height());
     println!("Start on count: {}", grid.on_count());
     for _ in 0..100 {
         grid.advance_step();
     }
     println!("Finish on count: {}", grid.on_count());
+    assert_eq!(grid.on_count(), 814);
+
+    println!("PART TWO...");
+    let mut grid = Grid::from_lines(include_str!("input.txt").lines());
+    for _ in 0..100 {
+        let max_x = grid.height() - 1;
+        let max_y = grid.width() - 1;
+        grid.lights[0][0] = true;
+        grid.lights[max_y][0] = true;
+        grid.lights[0][max_x] = true;
+        grid.lights[max_y][max_x] = true;
+        grid.advance_step();
+        grid.lights[0][0] = true;
+        grid.lights[max_y][0] = true;
+        grid.lights[0][max_x] = true;
+        grid.lights[max_y][max_x] = true;
+    }
+    println!("Finish on count: {}", grid.on_count());
+    assert_eq!(grid.on_count(), 924);
 }
 
 struct Grid {
@@ -20,7 +38,7 @@ struct Grid {
 
 impl Grid {
     fn from_lines(lines: Lines) -> Grid {
-        let mut lights: Vec<Vec<bool>> = Vec::new();
+        let mut lights = Vec::new();
 
         for line in lines {
             let tmp = line.chars().map(|c| c == '#').collect::<Vec<_>>();
