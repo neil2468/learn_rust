@@ -2,3 +2,4 @@ target/
 **/*.rs.bk
 fuzzy_attempt/Cargo.lock
 .gitignore
+adventOfCode_2015/day18/Cargo.lock
