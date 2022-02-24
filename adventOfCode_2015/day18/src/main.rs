@@ -1,8 +1,6 @@
 use std::str::Lines;
 
 fn main() {
-    println!("Hello, world!");
-
     let mut grid = Grid::from_lines(include_str!("input.txt").lines());
     println!("Dimensions: {}w {}h", grid.width(), grid.height());
     println!("Start on count: {}", grid.on_count());
